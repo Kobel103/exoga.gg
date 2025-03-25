@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config(); // Load the .env file
+dotenv.config();
 
 import express from 'express';
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
@@ -7,17 +7,15 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 const app = express();
 const port = 3000;
 
-const endpoint = 'https://api.start.gg/gql/alpha'; // Use const for endpoint
-
-const apiKey = process.env.START_GG_KEY; // Use const for apiKey
-console.log('API key:', apiKey);
+const endpoint = 'https://api.start.gg/gql/alpha'; // Start.gg API Endpoint
+const apiKey = process.env.START_GG_KEY; // Start.gg API Key
 
 app.get('/', (req, res) => {
   res.send('Bienvenue sur l\'API d\'ExoStats!');
 });
 
 app.get('/api/tournois/:state/:perPage', async (req, res) => {
-  const { state, perPage } = req.params; // Use destructuring to get the state and perPage parameters
+  const { state, perPage } = req.params;
   console.log('Request parameters:', { state, perPage });
   try {
     let result = {};
@@ -26,7 +24,7 @@ app.get('/api/tournois/:state/:perPage', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`, // Use template literals for the Authorization header
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         query: `
