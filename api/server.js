@@ -1,24 +1,59 @@
-require('dotenv').config(); // Load the .env file
-const express = require('express');
-const axios = require('axios');
+import dotenv from 'dotenv';
+dotenv.config(); // Load the .env file
+
+import express from 'express';
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 const app = express();
 const port = 3000;
 
+const endpoint = 'https://api.start.gg/gql/alpha'; // Use const for endpoint
+
 const apiKey = process.env.START_GG_KEY; // Use const for apiKey
+console.log('API key:', apiKey);
 
 app.get('/', (req, res) => {
-  res.send('Exo Stats real');
+  res.send('Bienvenue sur l\'API d\'ExoStats!');
 });
 
-// Example route to connect to an external API
-app.get('/api/matchupCheckVOL2', async (req, res) => {
+app.get('/api/tournois/:state/:perPage', async (req, res) => {
+  const { state, perPage } = req.params; // Use destructuring to get the state and perPage parameters
+  console.log('Request parameters:', { state, perPage });
   try {
-    const response = await axios.get('https://www.start.gg/tournament/matchup-check-vol-2/event/ultimate-singles', {
+    let result = {};
+    await fetch(endpoint, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}`, // Use template literals for the Authorization header
+      },
+      body: JSON.stringify({
+        query: `
+          query TournamentsByState($perPage: Int, $state: String!) {
+            tournaments(query: {
+              perPage: $perPage
+              filter: {
+                addrState: $state
+              }
+            }) {
+              nodes {
+                id
+                name
+                addrState
+              }
+            }
+          }
+        `,
+        operationName: 'TournamentsByState',
+        variables: { perPage: parseInt(perPage), state: state.toUpperCase() },
+      }),
+    }).then(r => r.json())
+    .then(data => {
+      console.log(data);
+      result = data.data;
     });
-    res.json(response.data);
+    res.json(result);
   } catch (error) {
     console.error('Error connecting to the API:', error);
     res.status(500).send('Error connecting to the API');
@@ -26,6 +61,5 @@ app.get('/api/matchupCheckVOL2', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`My boi be listening at http://localhost:${port}`);
+  console.log(`L'API ExoStats a été démarré sur l'URL http://localhost:${port}`);
 });
-
